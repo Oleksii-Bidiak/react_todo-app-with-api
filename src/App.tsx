@@ -1,6 +1,7 @@
 import {
   ChangeEvent,
   FC,
+  FormEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -21,7 +22,7 @@ import {
 } from './api/todos';
 import { emptyTodo, errorDelay } from './utils/const';
 import { Errors } from './types/Error';
-import { Todo, TodoStatus } from './types/Todo';
+import { Todo, TodoStatus, UpdateTodoData } from './types/Todo';
 
 export const App: FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -78,7 +79,7 @@ export const App: FC = () => {
   );
 
   const addTodo = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
+    async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
 
       if (!todoTitle.trim().length) {
@@ -115,49 +116,44 @@ export const App: FC = () => {
     [todoTitle],
   );
 
-  const removeTodo = useCallback((id: number) => {
-    setError('');
-    setProcessingsTodos(prev => [...prev, id]);
-
+  const onDeleteTodo = useCallback((id: number) => {
     deleteTodo(id)
-      .then(() =>
-        setTodos(currentTodos => currentTodos.filter(todo => todo.id !== id)),
-      )
-      .catch(() => setError(Errors.DELETE))
+      .then(() => {
+        setTodos(currentTodos => currentTodos.filter(t => t.id !== id));
+      })
+      .catch(() => {
+        setError(Errors.DELETE);
+      })
       .finally(() => {
         setProcessingsTodos(prev => prev.filter(prevItem => prevItem !== id));
         focusInputField();
       });
   }, []);
 
+  const removeTodo = useCallback(
+    (id: number) => {
+      setError('');
+      setProcessingsTodos(prev => [...prev, id]);
+
+      onDeleteTodo(id);
+    },
+    [onDeleteTodo],
+  );
+
   const removeTodos = useCallback(async () => {
     setIsLoading(true);
     setError('');
 
     const deletePromises = filteringTodosByCompletedStatus.map(todo => {
-      setProcessingsTodos(prev => [...prev, todo.id]);
-
-      deleteTodo(todo.id)
-        .then(() => {
-          setTodos(currentTodos => currentTodos.filter(t => t.id !== todo.id));
-        })
-        .catch(() => {
-          setError(Errors.DELETE);
-        })
-        .finally(() => {
-          setProcessingsTodos(prev =>
-            prev.filter(prevItem => prevItem !== todo.id),
-          );
-          focusInputField();
-        });
+      removeTodo(todo.id);
     });
 
     await Promise.allSettled(deletePromises);
     setIsLoading(false);
-  }, [filteringTodosByCompletedStatus]);
+  }, [filteringTodosByCompletedStatus, removeTodo]);
 
-  const onUpdateTodo = useCallback((todoForUpdate: Todo) => {
-    updateTodo(todoForUpdate)
+  const onUpdateTodo = useCallback((id: number, data: UpdateTodoData) => {
+    updateTodo(id, data)
       .then(todo =>
         setTodos(currentTodos => {
           const newTodos = [...currentTodos];
@@ -172,22 +168,16 @@ export const App: FC = () => {
         setError(Errors.UPDATE);
       })
       .finally(() => {
-        setProcessingsTodos(prev =>
-          prev.filter(prevItem => prevItem !== todoForUpdate.id),
-        );
+        setProcessingsTodos(prev => prev.filter(prevItem => prevItem !== id));
         focusInputField();
       });
   }, []);
 
   const toggleTodoStatus = useCallback(
-    (todo: Todo) => {
+    (id: number, data: UpdateTodoData) => {
       setError('');
-      setProcessingsTodos(prev => [...prev, todo.id]);
-
-      const todoForUpdate: Todo = { ...todo, completed: !todo.completed };
-
-      setProcessingsTodos(prev => [...prev, todo.id]);
-      onUpdateTodo(todoForUpdate);
+      setProcessingsTodos(prev => [...prev, id]);
+      onUpdateTodo(id, data);
     },
     [onUpdateTodo],
   );
@@ -208,10 +198,7 @@ export const App: FC = () => {
     }
 
     const togglePromises = todosForChange.map(todo => {
-      const todoForUpdate: Todo = { ...todo, completed: !todo.completed };
-
-      setProcessingsTodos(prev => [...prev, todo.id]);
-      onUpdateTodo(todoForUpdate);
+      toggleTodoStatus(todo.id, { completed: !todo.completed });
     });
 
     await Promise.allSettled(togglePromises);
@@ -219,11 +206,23 @@ export const App: FC = () => {
   }, [
     filteringTodosByActiveStatus,
     filteringTodosByCompletedStatus.length,
-    onUpdateTodo,
     todos,
+    toggleTodoStatus,
   ]);
 
-  // const onEdit = useCallback(() => {}, []);
+  const onEdit = useCallback(
+    (id: number, data: UpdateTodoData) => {
+      if (data?.title?.length === 0) {
+        removeTodo(id);
+
+        return;
+      }
+
+      setProcessingsTodos(prev => [...prev, id]);
+      onUpdateTodo(id, data);
+    },
+    [onUpdateTodo, removeTodo],
+  );
 
   const selectedStatusTodosHandler = useCallback((todoStatus: TodoStatus) => {
     setSelectedStatus(todoStatus);
@@ -274,6 +273,7 @@ export const App: FC = () => {
           tempTodo={tempTodo}
           visibleTodos={filteringTodosByStatus}
           toggleTodoStatus={toggleTodoStatus}
+          onEdit={onEdit}
         />
 
         {(todos.length !== 0 || tempTodo) && (

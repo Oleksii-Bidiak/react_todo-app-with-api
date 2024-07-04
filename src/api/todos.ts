@@ -1,4 +1,4 @@
-import { Todo } from '../types/Todo';
+import { Todo, UpdateTodoData } from '../types/Todo';
 import { client } from '../utils/fetchClient';
 
 export const USER_ID = 780;
@@ -17,6 +17,6 @@ export const deleteTodo = (id: number) => {
   return client.delete(`/todos/${id}`);
 };
 
-export const updateTodo = (todo: Todo) => {
-  return client.patch<Todo>(`/todos/${todo.id}`, todo);
+export const updateTodo = (id: number, data: UpdateTodoData) => {
+  return client.patch<Todo>(`/todos/${id}`, data);
 };

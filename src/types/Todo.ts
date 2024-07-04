@@ -5,6 +5,8 @@ export interface Todo {
   completed: boolean;
 }
 
+export type UpdateTodoData = Partial<Omit<Todo, 'id' | 'userId'>>;
+
 export enum TodoStatus {
   All = 'All',
   Active = 'Active',

@@ -1,15 +1,16 @@
 /* eslint-disable react/display-name */
 import { memo } from 'react';
-import { Todo } from '../types/Todo';
+import { Todo, UpdateTodoData } from '../types/Todo';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
-import { TodoItem } from './Todo';
+import { TodoItem } from './TodoItem';
 
 interface Props {
   visibleTodos: Todo[];
   processingsTodos: number[];
   tempTodo: Todo | null;
   removeTodo: (id: number) => void;
-  toggleTodoStatus: (todo: Todo) => void;
+  toggleTodoStatus: (id: number, data: UpdateTodoData) => void;
+  onEdit: (id: number, data: UpdateTodoData) => void;
 }
 
 export const TodoList = memo((props: Props) => {
@@ -19,7 +20,10 @@ export const TodoList = memo((props: Props) => {
     removeTodo,
     tempTodo = null,
     toggleTodoStatus,
+    onEdit,
   } = props;
+
+  // const onEditHandler = ()
 
   return (
     <section className="todoapp__main" data-cy="TodoList">
@@ -30,7 +34,10 @@ export const TodoList = memo((props: Props) => {
               todo={todo}
               isActive={processingsTodos.includes(todo.id)}
               removeTodo={() => removeTodo(todo.id)}
-              toggleTodoStatus={() => toggleTodoStatus(todo)}
+              toggleTodoStatus={() =>
+                toggleTodoStatus(todo.id, { completed: !todo.completed })
+              }
+              onEdit={onEdit}
             />
           </CSSTransition>
         ))}

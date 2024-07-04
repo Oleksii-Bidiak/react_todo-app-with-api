@@ -1,6 +1,7 @@
 /* eslint-disable react/display-name */
 import classNames from 'classnames';
 import { ChangeEvent, RefObject, memo } from 'react';
+import { Form } from './Form';
 
 interface Props {
   inputRef: RefObject<HTMLInputElement>;
@@ -38,18 +39,14 @@ export const Header = memo((props: Props) => {
         />
       )}
 
-      <form onSubmit={addTodo}>
-        <input
-          data-cy="NewTodoField"
-          type="text"
-          className="todoapp__new-todo"
-          placeholder="What needs to be done?"
-          ref={inputRef}
-          value={value}
-          onChange={onChange}
-          disabled={isLoading}
-        />
-      </form>
+      <Form
+        onSubmit={addTodo}
+        inputRef={inputRef}
+        onChange={onChange}
+        value={value}
+        isLoading={isLoading}
+        classNames="todoapp__new-todo"
+      />
     </header>
   );
 });
