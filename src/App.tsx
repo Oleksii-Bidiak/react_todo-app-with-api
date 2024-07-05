@@ -21,7 +21,7 @@ import {
   uploadTodo,
 } from './api/todos';
 import { emptyTodo, errorDelay } from './utils/const';
-import { Errors } from './types/Error';
+import { Errors, ErrorsTypes } from './types/Error';
 import { Todo, TodoStatus, UpdateTodoData } from './types/Todo';
 
 export const App: FC = () => {
@@ -30,10 +30,11 @@ export const App: FC = () => {
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [processingsTodos, setProcessingsTodos] = useState<number[]>([]);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<ErrorsTypes | ''>('');
   const [selectedStatus, setSelectedStatus] = useState<TodoStatus>(
     TodoStatus.All,
   );
+  const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const focusInputField = () => {
@@ -166,6 +167,7 @@ export const App: FC = () => {
       )
       .catch(() => {
         setError(Errors.UPDATE);
+        setEditingTodoId(id); // Встановлення ID редагованого завдання
       })
       .finally(() => {
         setProcessingsTodos(prev => prev.filter(prevItem => prevItem !== id));
@@ -210,9 +212,11 @@ export const App: FC = () => {
     toggleTodoStatus,
   ]);
 
+  // const setRefEdit = () => {}
+
   const onEdit = useCallback(
     (id: number, data: UpdateTodoData) => {
-      if (data?.title?.length === 0) {
+      if (data.title?.length === 0) {
         removeTodo(id);
 
         return;
@@ -274,6 +278,8 @@ export const App: FC = () => {
           visibleTodos={filteringTodosByStatus}
           toggleTodoStatus={toggleTodoStatus}
           onEdit={onEdit}
+          error={error}
+          editingTodoId={editingTodoId} // Передача ID редагованого завдання
         />
 
         {(todos.length !== 0 || tempTodo) && (

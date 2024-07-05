@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { Todo, UpdateTodoData } from '../types/Todo';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { TodoItem } from './TodoItem';
+import { ErrorsTypes } from '../types/Error';
 
 interface Props {
   visibleTodos: Todo[];
@@ -11,6 +12,8 @@ interface Props {
   removeTodo: (id: number) => void;
   toggleTodoStatus: (id: number, data: UpdateTodoData) => void;
   onEdit: (id: number, data: UpdateTodoData) => void;
+  error: ErrorsTypes | '';
+  editingTodoId: number | null;
 }
 
 export const TodoList = memo((props: Props) => {
@@ -21,6 +24,8 @@ export const TodoList = memo((props: Props) => {
     tempTodo = null,
     toggleTodoStatus,
     onEdit,
+    error = '',
+    editingTodoId,
   } = props;
 
   // const onEditHandler = ()
@@ -38,6 +43,8 @@ export const TodoList = memo((props: Props) => {
                 toggleTodoStatus(todo.id, { completed: !todo.completed })
               }
               onEdit={onEdit}
+              error={error}
+              cancel={editingTodoId === todo.id} // Додаємо умову для фокусування на помилковому інпуті
             />
           </CSSTransition>
         ))}

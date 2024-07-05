@@ -5,3 +5,5 @@ export enum Errors {
   DELETE = 'Unable to delete a todo',
   UPDATE = 'Unable to update a todo',
 }
+
+export type ErrorsTypes = `${Errors}`;

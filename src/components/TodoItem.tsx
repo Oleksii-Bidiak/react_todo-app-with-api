@@ -1,9 +1,10 @@
 /* eslint-disable react/display-name */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { FormEvent, memo, useEffect, useState } from 'react';
+import { FormEvent, KeyboardEvent, memo, useCallback, useState } from 'react';
 import { Todo, UpdateTodoData } from '../types/Todo';
 import classNames from 'classnames';
 import { Form } from './Form';
+import { ErrorsTypes } from '../types/Error';
 
 interface Props<T> {
   todo: T;
@@ -11,6 +12,8 @@ interface Props<T> {
   removeTodo?: () => void;
   toggleTodoStatus?: () => void;
   onEdit?: (id: number, data: UpdateTodoData) => void;
+  cancel?: boolean;
+  error?: ErrorsTypes | '';
 }
 
 export const TodoItem = memo((props: Props<Todo>) => {
@@ -20,16 +23,41 @@ export const TodoItem = memo((props: Props<Todo>) => {
     removeTodo,
     toggleTodoStatus = () => {},
     onEdit,
+    cancel = false,
   } = props;
-  const [formActive, setFormActive] = useState<boolean>(false);
+  const [formActive, setFormActive] = useState<boolean>(cancel);
   const [todoTitle, setTodoTitle] = useState<string>(todo.title);
 
   const onEditHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onEdit?.(todo.id, { title: todoTitle.trim() });
+
+    if (todoTitle !== todo.title) {
+      onEdit?.(todo.id, { title: todoTitle.trim() });
+      setFormActive(false);
+    } else {
+      setTodoTitle(todo.title);
+    }
   };
 
-  useEffect(() => {}, []);
+  const blurHandler = () => {
+    setFormActive(false);
+
+    if (todoTitle !== todo.title) {
+      onEdit?.(todo.id, { title: todoTitle.trim() });
+    } else {
+      setTodoTitle(todo.title);
+    }
+  };
+
+  const keyUpHandler = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Escape') {
+        setFormActive(false);
+        setTodoTitle(todo.title);
+      }
+    },
+    [todo.title],
+  );
 
   return (
     <div
@@ -55,8 +83,10 @@ export const TodoItem = memo((props: Props<Todo>) => {
           onSubmit={onEditHandler}
           value={todoTitle}
           onChange={e => setTodoTitle(e.target.value)}
-          onBlur={() => setFormActive(false)}
+          onBlur={blurHandler}
           classNames="todo__title-field"
+          onCancel={e => keyUpHandler(e)}
+          dataCy="TodoTitleField"
         />
       )}
       {!formActive && (

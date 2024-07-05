@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, FormEvent, RefObject } from 'react';
+import { ChangeEvent, FC, FormEvent, KeyboardEvent, RefObject } from 'react';
 
 interface Props {
   value: string;
@@ -8,6 +8,8 @@ interface Props {
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur?: () => void;
   classNames?: string;
+  onCancel?: (e: KeyboardEvent<HTMLInputElement>) => void;
+  dataCy?: string;
 }
 
 export const Form: FC<Props> = props => {
@@ -19,20 +21,22 @@ export const Form: FC<Props> = props => {
     value,
     onBlur = () => {},
     classNames,
+    onCancel = () => {},
+    dataCy = 'NewTodoField',
   } = props;
 
   return (
     <form onSubmit={onSubmit} onBlur={onBlur}>
       <input
-        data-cy="NewTodoField"
+        data-cy={dataCy}
         type="text"
         className={classNames}
-        // className="todoapp__new-todo"
         placeholder="What needs to be done?"
         ref={inputRef}
         value={value}
         onChange={onChange}
         disabled={isLoading}
+        onKeyUp={onCancel}
         autoFocus
       />
     </form>
