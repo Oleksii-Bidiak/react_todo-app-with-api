@@ -153,7 +153,8 @@ export const App: FC = () => {
     setIsLoading(false);
   }, [filteringTodosByCompletedStatus, removeTodo]);
 
-  const onUpdateTodo = useCallback((id: number, data: UpdateTodoData) => {
+  const onUpdateTodo = useCallback(async (id: number, data: UpdateTodoData) => {
+    setEditingTodoId(null);
     updateTodo(id, data)
       .then(todo =>
         setTodos(currentTodos => {
@@ -167,7 +168,9 @@ export const App: FC = () => {
       )
       .catch(() => {
         setError(Errors.UPDATE);
-        setEditingTodoId(id); // Встановлення ID редагованого завдання
+        if (data.hasOwnProperty('title')) {
+          setEditingTodoId(id);
+        }
       })
       .finally(() => {
         setProcessingsTodos(prev => prev.filter(prevItem => prevItem !== id));
@@ -215,7 +218,9 @@ export const App: FC = () => {
   // const setRefEdit = () => {}
 
   const onEdit = useCallback(
-    (id: number, data: UpdateTodoData) => {
+    async (id: number, data: UpdateTodoData) => {
+      setEditingTodoId(null);
+
       if (data.title?.length === 0) {
         removeTodo(id);
 

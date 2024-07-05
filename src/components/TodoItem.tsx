@@ -1,6 +1,13 @@
 /* eslint-disable react/display-name */
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { FormEvent, KeyboardEvent, memo, useCallback, useState } from 'react';
+import {
+  FormEvent,
+  KeyboardEvent,
+  memo,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { Todo, UpdateTodoData } from '../types/Todo';
 import classNames from 'classnames';
 import { Form } from './Form';
@@ -25,14 +32,22 @@ export const TodoItem = memo((props: Props<Todo>) => {
     onEdit,
     cancel = false,
   } = props;
+
   const [formActive, setFormActive] = useState<boolean>(cancel);
-  const [todoTitle, setTodoTitle] = useState<string>(todo.title);
+  const [todoTitle, setTodoTitle] = useState<string>('');
+
+  const dbClickHandler = () => {
+    setFormActive(true);
+    setTodoTitle(todo.title);
+  };
 
   const onEditHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (todoTitle !== todo.title) {
       onEdit?.(todo.id, { title: todoTitle.trim() });
+      setFormActive(false);
+    } else if (todoTitle === todo.title) {
       setFormActive(false);
     } else {
       setTodoTitle(todo.title);
@@ -59,6 +74,10 @@ export const TodoItem = memo((props: Props<Todo>) => {
     [todo.title],
   );
 
+  useEffect(() => {
+    setFormActive(cancel);
+  }, [cancel, todo.title]);
+
   return (
     <div
       data-cy="Todo"
@@ -66,7 +85,6 @@ export const TodoItem = memo((props: Props<Todo>) => {
         completed: todo.completed,
         'temp-item-enter temp-item-enter-active': todo.id === 0,
       })}
-      key={todo.id}
     >
       <label className="todo__status-label">
         <input
@@ -92,7 +110,7 @@ export const TodoItem = memo((props: Props<Todo>) => {
       {!formActive && (
         <>
           <span
-            onDoubleClick={() => setFormActive(true)}
+            onDoubleClick={dbClickHandler}
             data-cy="TodoTitle"
             className="todo__title"
           >

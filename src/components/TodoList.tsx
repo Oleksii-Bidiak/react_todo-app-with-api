@@ -28,8 +28,6 @@ export const TodoList = memo((props: Props) => {
     editingTodoId,
   } = props;
 
-  // const onEditHandler = ()
-
   return (
     <section className="todoapp__main" data-cy="TodoList">
       <TransitionGroup>
