@@ -215,8 +215,6 @@ export const App: FC = () => {
     toggleTodoStatus,
   ]);
 
-  // const setRefEdit = () => {}
-
   const onEdit = useCallback(
     async (id: number, data: UpdateTodoData) => {
       setEditingTodoId(null);
@@ -284,7 +282,7 @@ export const App: FC = () => {
           toggleTodoStatus={toggleTodoStatus}
           onEdit={onEdit}
           error={error}
-          editingTodoId={editingTodoId} // Передача ID редагованого завдання
+          editingTodoId={editingTodoId}
         />
 
         {(todos.length !== 0 || tempTodo) && (

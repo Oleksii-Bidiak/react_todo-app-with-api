@@ -33,6 +33,8 @@ export const TodoItem = memo((props: Props<Todo>) => {
     cancel = false,
   } = props;
 
+  const { completed, id, title } = todo;
+
   const [formActive, setFormActive] = useState<boolean>(cancel);
   const [todoTitle, setTodoTitle] = useState<string>('');
 
@@ -44,23 +46,23 @@ export const TodoItem = memo((props: Props<Todo>) => {
   const onEditHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (todoTitle !== todo.title) {
-      onEdit?.(todo.id, { title: todoTitle.trim() });
+    if (todoTitle !== title) {
+      onEdit?.(id, { title: todoTitle.trim() });
       setFormActive(false);
-    } else if (todoTitle === todo.title) {
+    } else if (todoTitle === title) {
       setFormActive(false);
     } else {
-      setTodoTitle(todo.title);
+      setTodoTitle(title);
     }
   };
 
   const blurHandler = () => {
     setFormActive(false);
 
-    if (todoTitle !== todo.title) {
-      onEdit?.(todo.id, { title: todoTitle.trim() });
+    if (todoTitle !== title) {
+      onEdit?.(id, { title: todoTitle.trim() });
     } else {
-      setTodoTitle(todo.title);
+      setTodoTitle(title);
     }
   };
 
@@ -68,22 +70,22 @@ export const TodoItem = memo((props: Props<Todo>) => {
     (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Escape') {
         setFormActive(false);
-        setTodoTitle(todo.title);
+        setTodoTitle(title);
       }
     },
-    [todo.title],
+    [title],
   );
 
   useEffect(() => {
     setFormActive(cancel);
-  }, [cancel, todo.title]);
+  }, [cancel, title]);
 
   return (
     <div
       data-cy="Todo"
       className={classNames('todo', {
         completed: todo.completed,
-        'temp-item-enter temp-item-enter-active': todo.id === 0,
+        'temp-item-enter temp-item-enter-active': id === 0,
       })}
     >
       <label className="todo__status-label">
@@ -91,7 +93,7 @@ export const TodoItem = memo((props: Props<Todo>) => {
           data-cy="TodoStatus"
           type="checkbox"
           className="todo__status"
-          checked={todo.completed}
+          checked={completed}
           onChange={toggleTodoStatus}
         />
       </label>
@@ -114,7 +116,7 @@ export const TodoItem = memo((props: Props<Todo>) => {
             data-cy="TodoTitle"
             className="todo__title"
           >
-            {todo.title}
+            {title}
           </span>
           <button
             type="button"
