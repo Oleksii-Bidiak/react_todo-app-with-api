@@ -5,65 +5,89 @@ import {
   KeyboardEvent,
   memo,
   useCallback,
-  useEffect,
+  useRef,
   useState,
 } from 'react';
 import { Todo, UpdateTodoData } from '../types/Todo';
 import classNames from 'classnames';
 import { Form } from './Form';
-import { ErrorsTypes } from '../types/Error';
 
 interface Props<T> {
   todo: T;
   isActive: boolean;
-  removeTodo?: () => void;
+  removeTodo?: (id: number) => void;
   toggleTodoStatus?: () => void;
-  onEdit?: (id: number, data: UpdateTodoData) => void;
-  cancel?: boolean;
-  error?: ErrorsTypes | '';
+  onUpdateTodo?: (id: number, data: UpdateTodoData) => Promise<void>;
+  updateProcessingsTodos?: (id: number) => void;
+  removeProcessingsTodos?: (id: number) => void;
 }
 
 export const TodoItem = memo((props: Props<Todo>) => {
   const {
     todo,
     isActive,
-    removeTodo,
+    removeTodo = () => {},
     toggleTodoStatus = () => {},
-    onEdit,
-    cancel = false,
+    onUpdateTodo,
+    updateProcessingsTodos,
+    removeProcessingsTodos,
   } = props;
 
   const { completed, id, title } = todo;
 
-  const [formActive, setFormActive] = useState<boolean>(cancel);
+  const [formActive, setFormActive] = useState<boolean>(false);
   const [todoTitle, setTodoTitle] = useState<string>('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const dbClickHandler = () => {
     setFormActive(true);
-    setTodoTitle(todo.title);
+    setTodoTitle(title);
   };
+
+  const onEdit = useCallback(async () => {
+    if (todoTitle.length === 0) {
+      removeTodo?.(id);
+
+      return;
+    }
+
+    updateProcessingsTodos?.(id);
+
+    if (todoTitle !== title) {
+      onUpdateTodo?.(id, { title: todoTitle.trim() })
+        .then(() => setFormActive(false))
+        .catch(() => {
+          if (inputRef.current) {
+            inputRef.current.focus();
+          }
+        })
+        .finally(() => removeProcessingsTodos?.(id));
+    } else if (todoTitle === title) {
+      setFormActive(false);
+      setTodoTitle(title);
+    }
+  }, [
+    id,
+    onUpdateTodo,
+    removeProcessingsTodos,
+    removeTodo,
+    title,
+    todoTitle,
+    updateProcessingsTodos,
+  ]);
 
   const onEditHandler = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (todoTitle !== title) {
-      onEdit?.(id, { title: todoTitle.trim() });
-      setFormActive(false);
-    } else if (todoTitle === title) {
-      setFormActive(false);
-    } else {
-      setTodoTitle(title);
-    }
+    onEdit();
   };
 
-  const blurHandler = () => {
-    setFormActive(false);
+  const onBlurHandler = () => {
+    onEdit();
+  };
 
-    if (todoTitle !== title) {
-      onEdit?.(id, { title: todoTitle.trim() });
-    } else {
-      setTodoTitle(title);
-    }
+  const removeTodoHandler = () => {
+    removeTodo?.(id);
   };
 
   const keyUpHandler = useCallback(
@@ -71,14 +95,11 @@ export const TodoItem = memo((props: Props<Todo>) => {
       if (e.key === 'Escape') {
         setFormActive(false);
         setTodoTitle(title);
+        removeProcessingsTodos?.(id);
       }
     },
-    [title],
+    [id, removeProcessingsTodos, title],
   );
-
-  useEffect(() => {
-    setFormActive(cancel);
-  }, [cancel, title]);
 
   return (
     <div
@@ -103,10 +124,11 @@ export const TodoItem = memo((props: Props<Todo>) => {
           onSubmit={onEditHandler}
           value={todoTitle}
           onChange={e => setTodoTitle(e.target.value)}
-          onBlur={blurHandler}
+          onBlur={onBlurHandler}
           classNames="todo__title-field"
           onCancel={e => keyUpHandler(e)}
           dataCy="TodoTitleField"
+          inputRef={inputRef}
         />
       )}
       {!formActive && (
@@ -122,7 +144,7 @@ export const TodoItem = memo((props: Props<Todo>) => {
             type="button"
             className="todo__remove"
             data-cy="TodoDelete"
-            onClick={removeTodo}
+            onClick={removeTodoHandler}
           >
             ×
           </button>

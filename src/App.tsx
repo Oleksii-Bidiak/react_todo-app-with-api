@@ -154,9 +154,8 @@ export const App: FC = () => {
   }, [filteringTodosByCompletedStatus, removeTodo]);
 
   const onUpdateTodo = useCallback(async (id: number, data: UpdateTodoData) => {
-    setEditingTodoId(null);
-    updateTodo(id, data)
-      .then(todo =>
+    return updateTodo(id, data)
+      .then(todo => {
         setTodos(currentTodos => {
           const newTodos = [...currentTodos];
           const index = newTodos.findIndex(t => t.id === todo.id);
@@ -164,17 +163,21 @@ export const App: FC = () => {
           newTodos.splice(index, 1, todo);
 
           return newTodos;
-        }),
-      )
+        });
+        setEditingTodoId(null);
+      })
       .catch(() => {
         setError(Errors.UPDATE);
         if (data.hasOwnProperty('title')) {
           setEditingTodoId(id);
+          throw new Error();
         }
       })
       .finally(() => {
         setProcessingsTodos(prev => prev.filter(prevItem => prevItem !== id));
-        focusInputField();
+        if (!data.hasOwnProperty('title')) {
+          focusInputField();
+        }
       });
   }, []);
 
@@ -215,25 +218,21 @@ export const App: FC = () => {
     toggleTodoStatus,
   ]);
 
-  const onEdit = useCallback(
-    async (id: number, data: UpdateTodoData) => {
-      setEditingTodoId(null);
-
-      if (data.title?.length === 0) {
-        removeTodo(id);
-
-        return;
-      }
-
-      setProcessingsTodos(prev => [...prev, id]);
-      onUpdateTodo(id, data);
-    },
-    [onUpdateTodo, removeTodo],
-  );
+  const selectedEditTodoId = (id: number | null) => {
+    setEditingTodoId(id);
+  };
 
   const selectedStatusTodosHandler = useCallback((todoStatus: TodoStatus) => {
     setSelectedStatus(todoStatus);
   }, []);
+
+  const updateProcessingsTodos = (id: number) => {
+    setProcessingsTodos(prev => [...prev, id]);
+  };
+
+  const removeProcessingsTodos = (id: number) => {
+    setProcessingsTodos(prev => prev.filter(prevItem => prevItem !== id));
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -280,9 +279,12 @@ export const App: FC = () => {
           tempTodo={tempTodo}
           visibleTodos={filteringTodosByStatus}
           toggleTodoStatus={toggleTodoStatus}
-          onEdit={onEdit}
           error={error}
           editingTodoId={editingTodoId}
+          selectedEditTodoId={selectedEditTodoId}
+          onUpdateTodo={onUpdateTodo}
+          updateProcessingsTodos={updateProcessingsTodos}
+          removeProcessingsTodos={removeProcessingsTodos}
         />
 
         {(todos.length !== 0 || tempTodo) && (

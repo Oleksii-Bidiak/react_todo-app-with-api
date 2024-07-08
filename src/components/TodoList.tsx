@@ -11,9 +11,12 @@ interface Props {
   tempTodo: Todo | null;
   removeTodo: (id: number) => void;
   toggleTodoStatus: (id: number, data: UpdateTodoData) => void;
-  onEdit: (id: number, data: UpdateTodoData) => void;
   error: ErrorsTypes | '';
   editingTodoId: number | null;
+  selectedEditTodoId: (id: number | null) => void;
+  onUpdateTodo: (id: number, data: UpdateTodoData) => Promise<void>;
+  updateProcessingsTodos: (id: number) => void;
+  removeProcessingsTodos: (id: number) => void;
 }
 
 export const TodoList = memo((props: Props) => {
@@ -23,9 +26,9 @@ export const TodoList = memo((props: Props) => {
     removeTodo,
     tempTodo = null,
     toggleTodoStatus,
-    onEdit,
-    error = '',
-    editingTodoId,
+    onUpdateTodo,
+    updateProcessingsTodos,
+    removeProcessingsTodos,
   } = props;
 
   return (
@@ -40,9 +43,9 @@ export const TodoList = memo((props: Props) => {
               toggleTodoStatus={() =>
                 toggleTodoStatus(todo.id, { completed: !todo.completed })
               }
-              onEdit={onEdit}
-              error={error}
-              cancel={editingTodoId === todo.id} // Додаємо умову для фокусування на помилковому інпуті
+              onUpdateTodo={onUpdateTodo}
+              updateProcessingsTodos={updateProcessingsTodos}
+              removeProcessingsTodos={removeProcessingsTodos}
             />
           </CSSTransition>
         ))}
