@@ -270,7 +270,7 @@ export const App: FC = () => {
           isLoading={isLoading}
           todosCount={todos.length}
           completedTodosCount={filteringTodosByCompletedStatus.length}
-          toggleAll={() => toggleAll()}
+          toggleAll={toggleAll}
         />
 
         <TodoList

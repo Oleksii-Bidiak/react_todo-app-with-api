@@ -119,7 +119,7 @@ export const TodoItem = memo((props: Props<Todo>) => {
         />
       </label>
 
-      {formActive && (
+      {formActive ? (
         <Form
           onSubmit={onEditHandler}
           value={todoTitle}
@@ -130,8 +130,7 @@ export const TodoItem = memo((props: Props<Todo>) => {
           dataCy="TodoTitleField"
           inputRef={inputRef}
         />
-      )}
-      {!formActive && (
+      ) : (
         <>
           <span
             onDoubleClick={dbClickHandler}
